@@ -1,0 +1,94 @@
+pragma solidity >0.5.0 <0.6.0;
+
+contract timelocked_donationPool {
+    string is_msgsender_poolmanager_1 = "Only the manager can prevent people from helping the world.";
+    string is_msgsender_poolmanager_2 = "Only the manager can allow people to helping the world again. Warn him if you find a whale still living.";
+    string is_msgsender_nottherecipient = "Don't waste money. You must use it to kill the whales!";
+    string donations_stopped_1 = "We have enough money to kill all the whales. Thank You!";
+    string donations_stopped_2 = "No more money, it's time to kill. Thank You!";
+    string payment_locked = "Making the last checks. Try again in 2 minutes to go killing!";
+    string balance_not_enough = "Need more money. The Whales must be destroyed!";
+    string donation_amount_check = "You deserve to live poor!";
+    
+    address public pool_manager;
+    address payable public donation_recipient;
+    uint base_timestamp;
+    //uint collected_money;
+    uint pay_every_12hours = 0;
+    bool donations_allowed = true;
+    
+    modifier isMsgSender_PoolManager(string memory feedback) {
+        require(pool_manager == msg.sender, feedback);
+        _;
+    }
+    
+    modifier isMsgSender_NotTheRecipient() {
+        require(donation_recipient != msg.sender, is_msgsender_nottherecipient);
+        _;
+    }
+    
+    modifier isDonationAllowed() {
+        require(donations_allowed == true, donations_stopped_1);
+        _;
+    }
+    
+    modifier isDonationInTime() {
+        require(now - base_timestamp < 20 minutes, donations_stopped_2);
+        _;
+    }
+    
+     modifier isPaymentUnlocked() {
+        require(block.timestamp > base_timestamp + 21 minutes, payment_locked);
+        _;
+    }
+    
+    modifier isDonationAmountGood() {
+        require(msg.value >= 0.02 ether, donation_amount_check);
+        _;
+    }
+    
+    constructor(address payable donation_recip) public payable {
+        donation_recipient = donation_recip;
+        pool_manager = msg.sender;
+        base_timestamp = now;
+    }
+    
+    function donateForKillingTheWhales()
+        isMsgSender_NotTheRecipient
+        isDonationAllowed
+        isDonationInTime
+        isDonationAmountGood()
+        public payable returns(string memory)
+    {
+        return "God bless you for your help cleaning the oceans!";
+    }
+    
+    function transferMoneyForKillingTheWhales()
+        isDonationAllowed
+        isDonationInTime
+        isPaymentUnlocked
+        public
+    {
+        uint fee = 0.01 ether;
+        donation_recipient.transfer(address(this).balance - fee);
+    }
+    
+    function stopDonationsForKillingTheWhales()
+        isMsgSender_PoolManager(is_msgsender_poolmanager_1)
+        public
+    {
+        donations_allowed = false;
+    }
+    
+    function restartDonationsForKillingTheWhales()
+        isMsgSender_PoolManager(is_msgsender_poolmanager_2)
+        public
+    {
+        donations_allowed = true;
+    }
+    
+    function contractBalance() public view returns(uint) {
+        return address(this).balance;
+    }
+    
+}
